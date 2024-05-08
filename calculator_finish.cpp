@@ -3,6 +3,7 @@
 #include <string>
 #include <map> // Include map for symbol table
 #include <cmath>
+#include <sstream>
 #include <math.h>
 
 // Token “kind” values:
@@ -210,7 +211,7 @@ double term()
 }
 
 // read and evaluate: 1   1+2.5   1+2+3.14  etc.
-//   return the sum (or difference)
+//   return the sum, difference, or product
 double expression()
 {
     double left = term(); // get the Term
@@ -225,6 +226,21 @@ double expression()
         case '-':
             left -= term();
             break;
+        case '*':
+            left *= term();
+            break;
+       case '/':
+            double divisor = term();
+            if (divisor == 0)
+                throw std::runtime_error("divide by zero");
+            left /= divisor;
+            break;
+        case '%':
+            double divisor = term();
+            if (divisor == 0)
+                throw std::runtime_error("divide by zero");
+            left = fmod(left, divisor);
+            break;
         default:
             ts.putback(t); // <<< put the unused token back
             return left;   // return the value of the expression
@@ -237,7 +253,7 @@ void clean_up_mess()
     ts.ignore(print);
 }
 
-void calculate()
+/*void calculate(std::string express)
 {
     while (std::cin)
     {
@@ -285,7 +301,71 @@ int main()
 {
     try
     {
-        calculate();
+        calculate(express);
+        return 0;
+    }
+    catch (...)
+    {
+        // other errors (don't try to recover)
+        std::cerr << "exception\n";
+        return 2;
+    }
+}
+*/
+void calculate(const std::string& express)
+{
+    std::istringstream iss(express);
+    while (iss)
+    {
+        try
+        {
+            std::cout << prompt; // print prompt
+            token t = ts.get();
+
+            // first discard all “prints”
+            while (t.kind() == print)
+                t = ts.get();
+
+            if (t.kind() == quit)
+                return; // ‘q’ for “quit”
+
+            if (t.kind() == let) // handle variable declaration
+            {
+                t = ts.get();
+                if (t.kind() != name)
+                    throw std::runtime_error("Name expected in declaration");
+                std::string var_name = t.name();
+                t = ts.get();
+                if (t.kind() != '=')
+                    throw std::runtime_error("= missing in declaration of " + var_name);
+                double d = expression();
+                symbol_table[var_name] = d;
+                std::cout << result << var_name << " = " << d << std::endl;
+            }
+            else
+            {
+                ts.putback(t);
+
+                std::cout << result << expression() << std::endl;
+            }
+        }
+        catch (std::runtime_error const &e)
+        {
+            std::cerr << e.what() << std::endl; // write error message
+            clean_up_mess();                    // <<< The tricky part!
+            break;
+        }
+    }
+}
+
+int main()
+{
+    try
+    {
+        std::string express;
+        std::cout << "Enter an expression: ";
+        std::getline(std::cin, express);
+        calculate(express);
         return 0;
     }
     catch (...)
