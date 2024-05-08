@@ -212,11 +212,11 @@ double term()
 
 // read and evaluate: 1   1+2.5   1+2+3.14  etc.
 //   return the sum, difference, or product
-double expression()
-{
+
+double expression() {
     double left = term(); // get the Term
-    while (true)
-    {
+    bool continue_calculation = true; // Flag to indicate whether to continue calculation
+    while (continue_calculation) {
         token t = ts.get(); // get the next token…
         switch (t.kind())   // ... and do the right thing with it
         {
@@ -229,23 +229,28 @@ double expression()
         case '*':
             left *= term();
             break;
-       case '/':
-            double divisor = term();
-            if (divisor == 0)
-                throw std::runtime_error("divide by zero");
-            left /= divisor;
+        case '/':
+            {
+                double divisor = term();
+                if (divisor == 0)
+                    throw std::runtime_error("divide by zero");
+                left /= divisor;
+            }
             break;
         case '%':
-            double divisor = term();
-            if (divisor == 0)
-                throw std::runtime_error("divide by zero");
-            left = fmod(left, divisor);
+            {
+                double divise = term(); // Renamed from divisor
+                if (divise == 0)
+                    throw std::runtime_error("divide by zero");
+                left = fmod(left, divise); // Changed from divisor to divise
+            }
             break;
         default:
             ts.putback(t); // <<< put the unused token back
-            return left;   // return the value of the expression
+            continue_calculation = false; // Set flag to false to exit the loop
         }
     }
+    return left;   // return the value of the expression
 }
 
 void clean_up_mess()
