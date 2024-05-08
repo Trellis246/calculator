@@ -301,8 +301,7 @@ void calculate(const std::string& express)
 
 int main()
 {
-    try
-    {
+    try{
         std::string express;
         std::cout << "Enter an expression: ";
         std::getline(std::cin, express);
