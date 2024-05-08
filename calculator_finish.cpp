@@ -253,65 +253,6 @@ void clean_up_mess()
     ts.ignore(print);
 }
 
-/*void calculate(std::string express)
-{
-    while (std::cin)
-    {
-        try
-        {
-            std::cout << prompt; // print prompt
-            token t = ts.get();
-
-            // first discard all “prints”
-            while (t.kind() == print)
-                t = ts.get();
-
-            if (t.kind() == quit)
-                return; // ‘q’ for “quit”
-
-            if (t.kind() == let) // handle variable declaration
-            {
-                t = ts.get();
-                if (t.kind() != name)
-                    throw std::runtime_error("Name expected in declaration");
-                std::string var_name = t.name();
-                t = ts.get();
-                if (t.kind() != '=')
-                    throw std::runtime_error("= missing in declaration of " + var_name);
-                double d = expression();
-                symbol_table[var_name] = d;
-                std::cout << result << var_name << " = " << d << std::endl;
-            }
-            else
-            {
-                ts.putback(t);
-
-                std::cout << result << expression() << std::endl;
-            }
-        }
-        catch (std::runtime_error const &e)
-        {
-            std::cerr << e.what() << std::endl; // write error message
-            clean_up_mess();                    // <<< The tricky part!
-        }
-    }
-}
-
-int main()
-{
-    try
-    {
-        calculate(express);
-        return 0;
-    }
-    catch (...)
-    {
-        // other errors (don't try to recover)
-        std::cerr << "exception\n";
-        return 2;
-    }
-}
-*/
 void calculate(const std::string& express)
 {
     std::istringstream iss(express);
