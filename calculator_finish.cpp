@@ -1,27 +1,25 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
-#include <map> // Include map for symbol table
+#include <map>
 #include <cmath>
 #include <sstream>
 #include <math.h>
 
 // Token “kind” values:
-char const number = '8';   // a floating-point number
-char const quit = 'q';     // an exit command
-char const print = ';';    // a print command
-char const name = 'a';     // name token
-char const let = 'L';      // declaration token
+char const number = '8';
+char const quit = 'q';
+char const print = ';';
+char const name = 'a';
+char const let = 'L';
 
-// Token stuff
 class token
 {
-    char kind_;        // what kind of token
-    double value_;     // for numbers: a value
-    std::string name_; // for variables: name
+    char kind_;
+    double value_;
+    std::string name_;
 
 public:
-    // constructors
     token(char ch) : kind_(ch), value_(0) {}
     token(char ch, double val) : kind_(ch), value_(val) {}
     token(char ch, std::string name) : kind_(ch), name_(name) {}
@@ -31,27 +29,22 @@ public:
     std::string name() const { return name_; }
 };
 
-// User interaction strings:
 std::string const prompt = "> ";
-std::string const result = "= "; // indicate that a result follows
+std::string const result = "= ";
 
-// Token Stream class
 class token_stream
 {
-    // representation: not directly accessible to users:
-    bool full;       // is there a token in the buffer?
-    token buffer;    // here is where we keep a Token put back using putback()
-public:
-    // user interface:
-    token get();            // get a token
-    void putback(token);    // put a token back into the token_stream
-    void ignore(char c);    // discard tokens up to and including a c
+    bool full;
+    token buffer;
 
-    // constructor: make a token_stream, the buffer starts empty
+public:
+    token get();
+    void putback(token);
+    void ignore(char c);
+
     token_stream() : full(false), buffer('\0') {}
 };
 
-// single global instance of the token_stream
 token_stream ts;
 
 void token_stream::putback(token t)
@@ -62,16 +55,14 @@ void token_stream::putback(token t)
     full = true;
 }
 
-token token_stream::get() // read a token from the token_stream
+token token_stream::get()
 {
-    // check if we already have a Token ready
     if (full)
     {
         full = false;
         return buffer;
     }
 
-    // note that >> skips whitespace (space, newline, tab, etc.)
     char ch;
     std::cin >> ch;
 
@@ -87,7 +78,7 @@ token token_stream::get() // read a token from the token_stream
     case '/':
     case '%':
     case '=':
-        return token(ch); // let each character represent itself
+        return token(ch);
     case '.':
     case '0':
     case '1':
@@ -100,20 +91,20 @@ token token_stream::get() // read a token from the token_stream
     case '8':
     case '9':
     {
-        std::cin.putback(ch); // put digit back into the input stream
+        std::cin.putback(ch);
         double val;
-        std::cin >> val; // read a floating-point number
+        std::cin >> val;
         return token(number, val);
     }
     default:
-        if (isalpha(ch)) // handle variables
+        if (isalpha(ch))
         {
             std::string s;
             s += ch;
             while (std::cin.get(ch) && (isalpha(ch) || isdigit(ch)))
                 s += ch;
             std::cin.putback(ch);
-            if (s == "let") // declaration keyword
+            if (s == "let")
                 return token(let);
             return token(name, s);
         }
@@ -121,18 +112,15 @@ token token_stream::get() // read a token from the token_stream
     }
 }
 
-// discard tokens up to and including a c
 void token_stream::ignore(char c)
 {
-    // first look in buffer:
-    if (full && c == buffer.kind()) // && means 'and'
+    if (full && c == buffer.kind())
     {
         full = false;
         return;
     }
-    full = false; // discard the contents of buffer
+    full = false;
 
-    // now search input:
     char ch = 0;
     while (std::cin >> ch)
     {
@@ -141,12 +129,11 @@ void token_stream::ignore(char c)
     }
 }
 
-// Symbol table for variables
 std::map<std::string, double> symbol_table;
 
 double expression();
 
-double primary() // Number or ‘(‘ Expression ‘)’
+double primary()
 {
     token t = ts.get();
     switch (t.kind())
@@ -160,8 +147,8 @@ double primary() // Number or ‘(‘ Expression ‘)’
         return d;
     }
     case number:
-        return t.value(); // return the number’s value
-    case '-': // Handle negation
+        return t.value();
+    case '-':
         return -primary();
     case name:
     {
@@ -175,13 +162,12 @@ double primary() // Number or ‘(‘ Expression ‘)’
     }
 }
 
-// exactly like expression(), but for * and /
 double term()
 {
-    double left = primary(); // get the Primary
+    double left = primary();
     while (true)
     {
-        token t = ts.get(); // get the next Token ...
+        token t = ts.get();
         switch (t.kind())
         {
         case '*':
@@ -204,21 +190,20 @@ double term()
             break;
         }
         default:
-            ts.putback(t); // <<< put the unused token back
-            return left;   // return the value
+            ts.putback(t);
+            return left;
         }
     }
 }
 
-// read and evaluate: 1   1+2.5   1+2+3.14  etc.
-//   return the sum, difference, or product
-
-double expression() {
-    double left = term(); // get the Term
-    bool continue_calculation = true; // Flag to indicate whether to continue calculation
-    while (continue_calculation) {
-        token t = ts.get(); // get the next token…
-        switch (t.kind())   // ... and do the right thing with it
+double expression()
+{
+    double left = term();
+    bool continue_calculation = true;
+    while (continue_calculation)
+    {
+        token t = ts.get();
+        switch (t.kind())
         {
         case '+':
             left += term();
@@ -230,27 +215,27 @@ double expression() {
             left *= term();
             break;
         case '/':
-            {
-                double divisor = term();
-                if (divisor == 0)
-                    throw std::runtime_error("divide by zero");
-                left /= divisor;
-            }
-            break;
+        {
+            double divisor = term();
+            if (divisor == 0)
+                throw std::runtime_error("divide by zero");
+            left /= divisor;
+        }
+        break;
         case '%':
-            {
-                double divise = term(); // Renamed from divisor
-                if (divise == 0)
-                    throw std::runtime_error("divide by zero");
-                left = fmod(left, divise); // Changed from divisor to divise
-            }
-            break;
+        {
+            double divise = term();
+            if (divise == 0)
+                throw std::runtime_error("divide by zero");
+            left = fmod(left, divise);
+        }
+        break;
         default:
-            ts.putback(t); // <<< put the unused token back
-            continue_calculation = false; // Set flag to false to exit the loop
+            ts.putback(t);
+            continue_calculation = false;
         }
     }
-    return left;   // return the value of the expression
+    return left;
 }
 
 void clean_up_mess()
@@ -258,24 +243,23 @@ void clean_up_mess()
     ts.ignore(print);
 }
 
-void calculate(const std::string& express)
+void calculate(const std::string &express)
 {
     std::istringstream iss(express);
     while (iss)
     {
         try
         {
-            std::cout << prompt; // print prompt
+            std::cout << prompt;
             token t = ts.get();
 
-            // first discard all “prints”
             while (t.kind() == print)
                 t = ts.get();
 
             if (t.kind() == quit)
-                return; // ‘q’ for “quit”
+                return;
 
-            if (t.kind() == let) // handle variable declaration
+            if (t.kind() == let)
             {
                 t = ts.get();
                 if (t.kind() != name)
@@ -297,8 +281,8 @@ void calculate(const std::string& express)
         }
         catch (std::runtime_error const &e)
         {
-            std::cerr << e.what() << std::endl; // write error message
-            clean_up_mess();                    // <<< The tricky part!
+            std::cerr << e.what() << std::endl;
+            clean_up_mess();
             break;
         }
     }
@@ -306,17 +290,18 @@ void calculate(const std::string& express)
 
 int main()
 {
-    try{
+    
+    {
         std::string express;
         std::cout << "Enter an expression: ";
         std::getline(std::cin, express);
         calculate(express);
-        return 0;
     }
-    catch (...)
+    /*catch (std::exception const &e)
     {
-        // other errors (don't try to recover)
-        std::cerr << "exception\n";
-        return 2;
+        std::cerr << "Error: " << e.what() << std::endl;
+        return 1;
     }
+*/
+    return 0;
 }
