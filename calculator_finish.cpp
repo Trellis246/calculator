@@ -50,12 +50,12 @@ public:
  
 // User interaction strings:
 std::string const prompt = "> ";
-std::string const result = "= ";    // indicate that a result follows
+std::string const result = "= ";    // indicate that a result is printed
 
 class token_stream{
 
     // representation: not directly accessible to users:
-    bool full;       // is there a token in the buffer?
+    bool full;       // checks for a token
     token buffer;    // here is where we keep a Token put back using
                      // putback()
 
@@ -95,7 +95,7 @@ token token_stream::get(){    // read a token from the token_stream
         return buffer;
     }
 
-    // note that >> skips whitespace (space, newline, tab, etc.)
+    // note that >> skips whitespace
     char ch;
     std::cin >> ch;
 
@@ -108,8 +108,8 @@ token token_stream::get(){    // read a token from the token_stream
     case '-':
     case '*':
     case '/':
-    case '%':  // Added support for modulo operator
-    case '=':  // Added support for variable assignment
+    case '%':  // Added modulo
+    case '=':  // Added variables
         return token(ch);    // let each character represent itself
     case '.':
     case '0':
@@ -146,11 +146,11 @@ token token_stream::get(){    // read a token from the token_stream
 void token_stream::ignore(char c){
 
     // first look in buffer:
-    if (full && c == buffer.kind()){    // && means 'and'
+    if (full && c == buffer.kind()){ 
         full = false;
         return;
     }
-    full = false;    // discard the contents of buffer
+    full = false;    // discard the contents in the buffer
 
     // now search input:
     char ch = 0;
@@ -190,7 +190,7 @@ double primary(){    // Number or ‘(‘ Expression ‘)’
             }
         }
     case '-':
-        return -primary(); // Handle negative numbers
+        return -primary(); // Handles negative numbers
     default:
         throw std::runtime_error("primary expected");
     }
@@ -223,8 +223,8 @@ double term(){
             break;
         }
         default:
-            ts.putback(t);    // <<< put the unused token back
-            return left;      // return the value
+            ts.putback(t);    // <<< adds the unused token back
+            return left;      // returns value
         }
     }
 } 
@@ -247,7 +247,7 @@ double expression(){
 
             ts.putback(t);    // <<< put the unused token back
         
-            return left;      // return the value of the expression
+            return left;      // returns value
 
         }
     }
@@ -262,7 +262,7 @@ void clean_up_mess(){
 void calculate(){
     while (std::cin){
         try{
-            std::cout << prompt;    // print prompt
+            std::cout << prompt;    // prints prompt
             token t = ts.get();
 
             // first discard all “prints”
